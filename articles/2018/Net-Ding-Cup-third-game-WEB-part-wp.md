@@ -25,12 +25,12 @@ if($host === "c7f.zhuque.com"){
 
 1.绕过stripos
 
-![](/Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-1.png)
+![image.png](Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-1.png)
 
 使用./..//demo2.php可绕过
 ./理解成一个目录，然后../就是回退到上一级目录
 
-![](/Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-2.png)
+![image.png](Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-2.png)
 
 成功绕过了stripos
 
@@ -40,7 +40,7 @@ http://username:password@hostname/path?arg=value
 ```
 这样，就需要进入第一个parse_url，给$uri赋值
 
-![](/Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-3.png)
+![image.png](Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-3.png)
 
 请求 
 ```javascript
@@ -52,7 +52,7 @@ http://127.0.0.1.@c7f.zhuque.com/..//demo2.php
 http://username:password@hostname/path?arg=value
 ```
 成功获取flag
-![](/Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-4.png)
+![image.png](Net-Ding-Cup-third-game-WEB-part-wp/网鼎杯第三场WEB部分wp-4.png)
 
 
 
