@@ -1,7 +1,7 @@
 # Mysql报错注入原理分析
 
 <sub>*
-对乌云[Mysql报错注入原理分析(count()、rand()、group by)](http://wooyun.jozxing.cc/static/drops/tips-14312.html)学习，对其做下记录
+对乌云[Mysql报错注入原理分析(count()、rand()、group by)](http://wooyun.jozxing.cc/static/drops/tips-14312.html)学习，对其做下记录。
 
 ## 疑问
 
@@ -17,7 +17,7 @@ select count(*),(floor(rand(0)*2))x from information_schema.tables group by x;
 ```
 
 
-这是网上最常见的语句,目前位置看到的网上 sql 注入教程, floor 都是直接放 count(*) 后面，为了排除干扰，我们直接对比了两个报错语句，如下图：
+这是网上最常见的语句,目前位置看到的网上 sql 注入教程,floor 都是直接放 count(*) 后面，为了排除干扰，我们直接对比了两个报错语句，如下图：
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析2.png)
 
@@ -32,29 +32,27 @@ select count(*),(floor(rand(0)*2))x from information_schema.tables group by x;
 ```
 
 
-这条语句是不是一定报错呢，user 表中插入一条数据  
+这条语句是不是一定报错呢？user 表中插入一条数据。
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析3.png)
 
-可以看到不会报错  
+可以看到不会报错。
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析4.png)
 
-再插入一条数据，依然没有报错  
+再插入一条数据，依然没有报错。  
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析5.png)
 
-继续插入数据，报错  
+继续插入数据，报错。  
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析6.png)
 
-说明
+说明报错需要3条和3条以上数据
 
 ```sql
 select count(*),(floor(rand(0)*2))x from information_schema.tables group by x; 
 ```
-
-报错需要3条和3条以上数据
 
 ## 随机因子具有决定权么(rand()和rand(0))
 
@@ -62,19 +60,19 @@ select count(*),(floor(rand(0)*2))x from information_schema.tables group by x;
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析7.png)
 
-一条数据的时候 x 值不断变化，但是不会报错  
+一条数据的时候 x 值不断变化，但是不会报错。  
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析8.png)
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析9.png)
 
-插入一条数据，报错是随机的  
+插入一条数据，报错是随机的。  
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析10.png)
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析11.png)
 
-再插入一条记录，三条记录看一下，报错也是随机的
+再插入一条记录，三条记录看一下，报错也是随机的。
 
 由此可见报错和随机因子是有关联的，但有什么关联呢，为什么直接使用 rand() ，有两条记录的情况下就会报错，而且是有时候报错，有时候不报错，而 rand(0) 的时候在两条的时候不报错，在三条以上就绝对报错？我们继续往下看。
 
@@ -90,7 +88,7 @@ select floor(rand()*2) from user;
 
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析12.png)
 
-对比三次查询发现`floor(rand()*2)`是随机的,接下来看`floor(rand(0)*2)`
+对比三次查询发现`floor(rand()*2)`是随机的,接下来看`floor(rand(0)*2)`。
 
 ```sql
 select floor(rand(0)*2) from user;
@@ -106,7 +104,7 @@ select floor(rand(0)*2) from user;
   
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析14.png)
 
-可以看出admin10的记录有5条
+可以看出admin10的记录有5条。
 
 
 与 count(*) 的结果相符合，那么 mysql 在遇到`select count(*) from user group by x;`这语句的时候到底做了哪些操作呢，我们果断猜测 mysql 遇到该语句时会建立一个虚拟表(实际上就是会建立虚拟表)，那整个工作流程就会如下图所示：
@@ -145,60 +143,62 @@ select floor(rand(0)*2) from user;
 5.整个查询过程 floor(rand(0)*2) 被计算了 5 次，查询原数据表 3 次，所以这就是为什么数据表中需要 3 条数据，使用该语句才会报错的原因。  
 
 |floor(rand(0)*2) |  |
-| - | :-: |
-|0 |	select (不存在)  第一条数据 |
-|1 |	insert (插入，count(*)为1)  第一条数据 |
-|1 |	select (存在，直接count(*),这时key为1的count(*)值为2)  第二条数据 |
-|0 |	select (不存在)  第三条数据 |
-|1 |	insert (插入，存在，同key为1主键唯一冲突，报错)  第三条数据 |
+|:---|:---|
+|0 |select (不存在)  第一条数据 |
+|1 |insert (插入，count(*)为1)  第一条数据 |
+|1 |select (存在，直接count(*),这时key为1的count(*)值为2)  第二条数据 |
+|0 |select (不存在)  第三条数据 |
+|1 |insert (插入，存在，同key为1主键唯一冲突，报错)  第三条数据 |
 
 
 同样的
 
-floor(rand(4)*2)  
+`floor(rand(4)*2)`  
 
- ![](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析19.png)
+![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析19.png)
 
 也是三条数据就会报错
 
-floor(rand(11)*2)  
+`floor(rand(11)*2)`
 
-![](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析20.png)
+![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析20.png)
 
  
 |floor(rand(11)*2) |  |	
-| - | :-: |
-|1 |	select (不存在)&nbsp;&nbsp;第一条数据|
-|0 |	insert (插入，count(*)为1)&nbsp;&nbsp;第一条数据|
-|0 |	select (存在，直接count(*),这时key为0的count(\*)为2)  第二条数据|
-|1 |	select (不存在)  第三条数据|
-|0 |	insert (插入，存在，同key为1主键唯一冲突，报错)  第三条数据|
+|:---|:---|
+|1 |select (不存在)&nbsp;&nbsp;第一条数据|
+|0 |insert (插入，count(*)为1)&nbsp;&nbsp;第一条数据|
+|0 |select (存在，直接count(*),这时key为0的count(\*)为2)  第二条数据|
+|1 |select (不存在)  第三条数据|
+|0 |insert (插入，存在，同key为1主键唯一冲突，报错)  第三条数据|
 
 而 rand(1) , rand(2) 这种的就不会报错了
   
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析21.png)  
 
 |floor(rand(1)*2) |  |
-| - | :-: |
-|0 |	select (不存在)  第一条数据 |
-|1 |	insert (插入，count(*)为1)  第一条数据 |
-|0 |	select (不存在)  第二条数据 |
-|0 |	insert (插入，count(*)为1)  第二条数据 |
-|0 |	select (存在，key为0的值count(*)加1)  第三条数据 |
+|:---|:---|
+|0 |select (不存在)  第一条数据 |
+|1 |insert (插入，count(*)为1)  第一条数据 |
+|0 |select (不存在)  第二条数据 |
+|0 |insert (插入，count(*)为1)  第二条数据 |
+|0 |select (存在，key为0的值count(*)加1)  第三条数据 |
 
 
-这里为什么使用 count() 这个函数呢，首先我们知道 count() 为聚合函数，类似的 sum() 也为聚合函数，sum()代替 count()，同样可以达到报错注入的效果
+这里为什么使用 count() 这个函数呢，首先我们知道 count() 为聚合函数，类似的 sum() 也为聚合函数，sum()代替 count()，同样可以达到报错注入的效果。
 
-常见的聚合函数还有 AVG()，MAX()，MIN()
+常见的聚合函数还有 AVG()，MAX()，MIN()。
   
 ![image.png](Analysis-of-MySQL's-error-injection-principle/Mysql报错注入原理分析22.png)
 
 ## 总结
-通过上面我们知道Mysql报错注入不一定通过
+
+通过上面我们知道Mysql报错注入不一定通过如下 SQL 语句：
 
 ```sql
 select count(*),(floor(rand(0)*2))x from information_schema.tables group by x; 
 ```
+
 rand(0) 可以替换为 rand(4),rand(11)。count(*) 可以替换成其他聚合函数。同样能够达到报错注入的效果。
 
 
