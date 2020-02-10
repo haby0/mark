@@ -8,6 +8,9 @@
 </p>
 
 <br>
+## [2020年](articles/2020/)
+- &lt;article month=02 day=10 title=&quot;[JDK7u21 deserialization vulnerability](articles/2020/JDK7u21-deserialization-vulnerability.md)&quot;/&gt;
+
 
 ## [2019年](articles/2019/)
 - &lt;article month=12 day=03 title=&quot;[CVE-2018-1261：spring-integration-zip的不安全解压缩](articles/2019/CVE-2018-1261-Unsafe-Unzip-with-spring-integration-zip.md)&quot;/&gt;
