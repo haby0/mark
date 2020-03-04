@@ -11,6 +11,7 @@
 
 
 ## [2020年](articles/2020/)
+- &lt;article month=03 day=04 title=&quot;[RMI learning](articles/2020/RMI-learning.md)&quot;/&gt;
 - &lt;article month=02 day=17 title=&quot;[JRE8u20 deserialization vulnerability](articles/2020/JRE8u20-deserialization-vulnerability.md)&quot;/&gt;
 - &lt;article month=02 day=10 title=&quot;[JDK7u21 deserialization vulnerability](articles/2020/JDK7u21-deserialization-vulnerability.md)&quot;/&gt;
 
