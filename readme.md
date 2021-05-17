@@ -10,10 +10,9 @@
 <br>
 
 ## [2021年](articles/2021/)
-- &lt;article month=04 day=15 title=&quot;[使用CodeQL检测JSONP注入](articles/2021/使用CodeQL检测JSONP注入.md)&quot;/&gt;
-- &lt;article month=04 day=15 title=&quot;[Detecting JSONP injection with CodeQL](articles/2021/Detecting%20JSONP%20injection%20with%20CodeQL.md)&quot;/&gt;
-- &lt;article month=04 day=02 title=&quot;[使用CodeQL检测非生产接口](articles/2021/使用CodeQL检测非生产接口.md)&quot;/&gt;
-- &lt;article month=04 day=02 title=&quot;[Detecting Non-Production interface with CodeQL](articles/2021/Detecting%20Non-Production%20interface%20with%20CodeQL.md)&quot;/&gt;
+- &lt;article month=05 day=17 zh=&quot;[使用CodeQL检测客户端IP伪造漏洞](articles/2021/使用CodeQL检测客户端IP伪造漏洞.md)&quot; en=&quot;[Detecting Client IP forgery vulnerabilities with CodeQL](articles/2021/Detecting%20Client%20IP%20forgery%20vulnerabilities%20with%20CodeQL.md)&quot; /&gt;
+- &lt;article month=04 day=15 zh=&quot;[使用CodeQL检测JSONP注入](articles/2021/使用CodeQL检测JSONP注入.md)&quot; en=&quot;[Detecting JSONP injection with CodeQL](articles/2021/Detecting%20JSONP%20injection%20with%20CodeQL.md)&quot;/&gt;
+- &lt;article month=04 day=02 zh=&quot;[使用CodeQL检测非生产接口](articles/2021/使用CodeQL检测非生产接口.md)&quot; en=&quot;[Detecting Non-Production interface with CodeQL](articles/2021/Detecting%20Non-Production%20interface%20with%20CodeQL.md)&quot;/&gt;
 - &lt;article month=03 day=19 title=&quot;[Detecting XQuery injection with CodeQL](articles/2021/Detecting%20XQuery%20injection%20with%20CodeQL.md)&quot;/&gt;
 - &lt;article month=02 day=23 title=&quot;[CodeQL-数据流在Java中的使用](articles/2021/CodeQL-数据流在Java中的使用.md)&quot;/&gt;
 - &lt;article month=01 day=13 title=&quot;[Flink任意文件读取&写入](articles/2021/Flink%20任意文件读取和写入.md)&quot;/&gt;
