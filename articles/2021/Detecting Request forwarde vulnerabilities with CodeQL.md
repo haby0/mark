@@ -2,7 +2,7 @@
 
 Request forwarde is a jump behavior in the server (note). It can ensure that the resources of the current application are accessed without changing the address bar of the browser, so as to share the data in a user request. Request forwarde can access WEB applications Resources in the root directory, such as resources in the `WEB-INF` directory, when some configuration files are stored in the `WEB-INF` directory, it is easy to cause sensitive information leakage.
 
-![unsafe-url-forward](/images/unsafe-url-forward.png)
+![unsafe-url-forward](/articles/2021/images/unsafe-url-forward.png)
 
 According to the `MVC` architecture design, the data requested by the user will be passed to the `Servlet` through the browser, and the program will process the business logic in the `Servlet`, and then return the processing result to the view. The process of returning the processing result to the view will often use request forwarde.
 
