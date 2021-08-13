@@ -2,7 +2,7 @@
 
 请求转发是服务器内(注意)的一种跳转行为, 它可以保证在浏览器地址栏不发生改变的情况下去访问当前应用的资源, 实现共享用户一次请求中的数据. 请求转发可访问WEB应用根目录下的资源, 如: `WEB-INF`目录下的资源, 当`WEB-INF`目录下存放一些配置文件时, 容易造成敏感信息泄露.
 
-![unsafe-url-forward](/images/unsafe-url-forward)
+![unsafe-url-forward](/images/unsafe-url-forward.png)
 
 按照MVC架构设计, 用户请求的数据会经过浏览器传到Servlet, 程序在Servlet中进行业务逻辑处理, 然后将处理结果返回给视图. 将处理结果返回给视图这一过程就会经常用到请求转发.
 
