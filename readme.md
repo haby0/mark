@@ -10,6 +10,7 @@
 <br>
 
 ## [2021年](articles/2021/)
+- &lt;article month=10 day=19 title=&quot;[CodeQL SSA Study](articles/2021/CodeQL%20SSA%20Study.md)&quot;/&gt;
 - &lt;article month=08 day=13 zh=&quot;[使用CodeQL检测请求转发漏洞](articles/2021/使用CodeQL检测请求转发漏洞.md)&quot; en=&quot;[Detecting Client IP forgery vulnerabilities with CodeQL](articles/2021/Detecting%20Request%20forwarde%20vulnerabilities%20with%20CodeQL.md)&quot; /&gt;
 - &lt;article month=05 day=17 zh=&quot;[使用CodeQL检测客户端IP伪造漏洞](articles/2021/使用CodeQL检测客户端IP伪造漏洞.md)&quot; en=&quot;[Detecting Client IP forgery vulnerabilities with CodeQL](articles/2021/Detecting%20Client%20IP%20forgery%20vulnerabilities%20with%20CodeQL.md)&quot; /&gt;
 - &lt;article month=04 day=15 zh=&quot;[使用CodeQL检测JSONP注入](articles/2021/使用CodeQL检测JSONP注入.md)&quot; en=&quot;[Detecting JSONP injection with CodeQL](articles/2021/Detecting%20JSONP%20injection%20with%20CodeQL.md)&quot;/&gt;
