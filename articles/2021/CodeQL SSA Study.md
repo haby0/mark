@@ -65,7 +65,7 @@ private newtype TSsaSourceVariable =
 
 ```qll
 class SsaSourceVariable extends TSsaSourceVariable {
-  // 获取与此`SsaSourceVariable`对应的变量。
+  // 获取与此`SsaSourceVariable`对应的变量。获取方法或构造函数中第一次使用到的变量。
   // 该变量对应三种类型：局部作用域变量、成员变量、静态变量、非静态实例变量
   Variable getVariable() {
     // this = TLocalVar(_, result) CodeQL语法，能够将result提取出来
@@ -76,26 +76,31 @@ class SsaSourceVariable extends TSsaSourceVariable {
   }
 
   cached // 缓存
+  // 获取方法或构造函数中使用变量的位置，不包含定义
   VarAccess getAnAccess() {
+    // 返回使用局部作用域变量的变量
     exists(LocalScopeVariable v, Callable c |
       this = TLocalVar(c, v) and result = v.getAnAccess() and result.getEnclosingCallable() = c
     )
     or
-    exists(Field f, Callable c | fieldAccessInCallable(result, f, c) |
+    exists(Field f, Callable c | fieldAccessInCallable(result, f, c) |  // 限定字段变量在方法或构造函数中
+      // 字段变量是成员变量或静态变量
       (result.(FieldAccess).isOwnFieldAccess() or f.isStatic()) and
       this = TPlainField(c, f)
       or
+      // 字段变量是类实例变量
       exists(RefType t |
         this = TEnclosingField(c, f, t) and result.(FieldAccess).isEnclosingFieldAccess(t)
       )
       or
+      // 字段变量是非静态实例变量
       exists(SsaSourceVariable q |
         result.getQualifier() = q.getAnAccess() and this = TQualifiedField(c, q, f)
       )
     )
   }
   
-  // 获取定义了`SsaSourceVariable`的方法或构造函数
+  // 获取定义了`SsaSourceVariable`的方法或构造函数。获取满足下面条件的字段变量所在的方法或构造函数
   // 1.局部作用域变量或局部作用域变量被使用所在方法或构造函数
   // 2.读取字段变量访问的成员变量或静态变量所在的方法或构造函数
   // 3.读取字段变量访问的变量所在的方法或构造函数
@@ -107,7 +112,7 @@ class SsaSourceVariable extends TSsaSourceVariable {
     this = TQualifiedField(result, _, _)
   }
 
-  // 获取`SsaSourceVariable`的表示文本
+  // 获取`SsaSourceVariable`的表示文本。获取字段变量的全限定名
   string toString() {
     exists(LocalScopeVariable v, Callable c | this = TLocalVar(c, v) |
       if c = v.getCallable()
@@ -118,6 +123,7 @@ class SsaSourceVariable extends TSsaSourceVariable {
     result = this.(SsaSourceField).ppQualifier() + "." + getVariable().toString()
   }
 
+  // 获取变量在方法或构造函数中第一次被使用的位置
   private VarAccess getFirstAccess() {
     result =
       min(this.getAnAccess() as a
@@ -126,16 +132,20 @@ class SsaSourceVariable extends TSsaSourceVariable {
       )
   }
 
+  // 获取变量位置
   Location getLocation() {
     exists(LocalScopeVariable v | this = TLocalVar(_, v) and result = v.getLocation())
     or
     this instanceof SsaSourceField and result = getFirstAccess().getLocation()
   }
 
+  // 获取变量类型
   Type getType() { result = this.getVariable().getType() }
 
+  // 获取变量限定符
   SsaSourceVariable getQualifier() { this = TQualifiedField(_, result, _) }
 
+  // 获取SSA变量，该变量将此变量做为其基础源变量
   SsaVariable getAnSsaVariable() { result.getSourceVariable() = this }
 }
 ```
