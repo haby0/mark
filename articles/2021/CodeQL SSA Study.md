@@ -49,5 +49,88 @@ private newtype TSsaSourceVariable =
 （1）当读取字段访问fr被this或super调用，并且它访问的字段是f，并且在函数或构造函数c中；
 （2）字段f是静态的，并且它是读取字段访问表达式访问的字段，并且在函数或构造函数c中；
 
+#### 2.3 TEnclosingField（类似一个函数，但是没有返回值）
+当两个约束条件同时满足时，成立：
+（1）当读取字段访问fr访问的字段是f，并且在函数或构造函数c中；
+（2）当读取字段访问fr访问的字段是类t的实例字段；
 
+#### 2.4 TQualifiedField（类似一个函数，但是没有返回值）
+当两个约束条件同时满足时，成立：
+（1）当读取字段访问fr访问的字段是实例字段f，并且在函数或构造函数c中；
+（2）当读取字段访问fr的限定符等于对`SsaSourceVariable`的访问；
 
+### 3 SsaSourceVariable类
+
+继承`TSsaSourceVariable`类型，符合`TSsaSourceVariable`中的四种情况
+
+```qll
+class SsaSourceVariable extends TSsaSourceVariable {
+  // 获取与此`SsaSourceVariable`对应的变量。
+  // 该变量对应三种类型：局部作用域变量、类字段、静态字段、实例字段
+  Variable getVariable() {
+    // this = TLocalVar(_, result) CodeQL语法，能够将result提取出来
+    this = TLocalVar(_, result) or // result是局部作用域变量 
+    this = TPlainField(_, result) or // result是字段
+    this = TEnclosingField(_, result, _) or // result是字段
+    this = TQualifiedField(_, _, result) // result是实例字段
+  }
+
+  cached
+  VarAccess getAnAccess() {
+    exists(LocalScopeVariable v, Callable c |
+      this = TLocalVar(c, v) and result = v.getAnAccess() and result.getEnclosingCallable() = c
+    )
+    or
+    exists(Field f, Callable c | fieldAccessInCallable(result, f, c) |
+      (result.(FieldAccess).isOwnFieldAccess() or f.isStatic()) and
+      this = TPlainField(c, f)
+      or
+      exists(RefType t |
+        this = TEnclosingField(c, f, t) and result.(FieldAccess).isEnclosingFieldAccess(t)
+      )
+      or
+      exists(SsaSourceVariable q |
+        result.getQualifier() = q.getAnAccess() and this = TQualifiedField(c, q, f)
+      )
+    )
+  }
+
+  Callable getEnclosingCallable() {
+    this = TLocalVar(result, _) or
+    this = TPlainField(result, _) or
+    this = TEnclosingField(result, _, _) or
+    this = TQualifiedField(result, _, _)
+  }
+
+  // 获取`SsaSourceVariable`的表示文本
+  string toString() {
+    exists(LocalScopeVariable v, Callable c | this = TLocalVar(c, v) |
+      if c = v.getCallable()
+      then result = v.getName()
+      else result = c.getName() + "(..)." + v.getName()
+    )
+    or
+    result = this.(SsaSourceField).ppQualifier() + "." + getVariable().toString()
+  }
+
+  private VarAccess getFirstAccess() {
+    result =
+      min(this.getAnAccess() as a
+        order by
+          a.getLocation().getStartLine(), a.getLocation().getStartColumn()
+      )
+  }
+
+  Location getLocation() {
+    exists(LocalScopeVariable v | this = TLocalVar(_, v) and result = v.getLocation())
+    or
+    this instanceof SsaSourceField and result = getFirstAccess().getLocation()
+  }
+
+  Type getType() { result = this.getVariable().getType() }
+
+  SsaSourceVariable getQualifier() { this = TQualifiedField(_, result, _) }
+
+  SsaVariable getAnSsaVariable() { result.getSourceVariable() = this }
+}
+```
