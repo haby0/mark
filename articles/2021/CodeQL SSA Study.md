@@ -66,16 +66,16 @@ private newtype TSsaSourceVariable =
 ```qll
 class SsaSourceVariable extends TSsaSourceVariable {
   // 获取与此`SsaSourceVariable`对应的变量。
-  // 该变量对应三种类型：局部作用域变量、类字段、静态字段、实例字段
+  // 该变量对应三种类型：局部作用域变量、成员变量、静态变量、非静态实例变量
   Variable getVariable() {
     // this = TLocalVar(_, result) CodeQL语法，能够将result提取出来
     this = TLocalVar(_, result) or // result是局部作用域变量 
-    this = TPlainField(_, result) or // result是字段
-    this = TEnclosingField(_, result, _) or // result是字段
-    this = TQualifiedField(_, _, result) // result是实例字段
+    this = TPlainField(_, result) or // result是成员变量或静态变量
+    this = TEnclosingField(_, result, _) or
+    this = TQualifiedField(_, _, result) // result是非静态实例变量
   }
 
-  cached
+  cached // 缓存
   VarAccess getAnAccess() {
     exists(LocalScopeVariable v, Callable c |
       this = TLocalVar(c, v) and result = v.getAnAccess() and result.getEnclosingCallable() = c
@@ -94,7 +94,12 @@ class SsaSourceVariable extends TSsaSourceVariable {
       )
     )
   }
-
+  
+  // 获取定义了`SsaSourceVariable`的方法或构造函数
+  // 1.局部作用域变量或局部作用域变量被使用所在方法或构造函数
+  // 2.读取字段变量访问的成员变量或静态变量所在的方法或构造函数
+  // 3.读取字段变量访问的变量所在的方法或构造函数
+  // 4.读取字段变量访问的非静态实例变量所在的方法或构造函数
   Callable getEnclosingCallable() {
     this = TLocalVar(result, _) or
     this = TPlainField(result, _) or
