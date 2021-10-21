@@ -149,3 +149,40 @@ class SsaSourceVariable extends TSsaSourceVariable {
   SsaVariable getAnSsaVariable() { result.getSourceVariable() = this }
 }
 ```
+
+### 4 SsaSourceField类
+
+```qll
+class SsaSourceField extends SsaSourceVariable {
+  // 继承SsaSourceVariable，除局部作用域变量外的变量
+  SsaSourceField() {
+    this = TPlainField(_, _) or this = TEnclosingField(_, _, _) or this = TQualifiedField(_, _, _)
+  }
+
+  /** Gets the field corresponding to this named field. */
+  // 调用父类`SsaSourceVariable`的`getVariable`方法获取`SsaSourceField`类型字段
+  Field getField() { result = getVariable() }
+
+  /** Gets a string representation of the qualifier. */
+  // 获取限定符的字符串表示形式
+  string ppQualifier() {
+    // 静态字段返回全限定类名，否则返回this
+    exists(Field f | this = TPlainField(_, f) |
+      if f.isStatic() then result = f.getDeclaringType().getQualifiedName() else result = "this"
+    )
+    or
+    // 外部类名 + this
+    exists(Field f, RefType t | this = TEnclosingField(_, f, t) | result = t.toString() + ".this")
+    or
+    // SsaSourceVariable类型变量的限定符字符串
+    exists(SsaSourceVariable q | this = TQualifiedField(_, q, _) | result = q.toString())
+  }
+
+  /** Holds if the field itself or any of the fields part of the qualifier are volatile. */
+  // 如果字段本身或限定符的任何字段部分使用了`volatile`关键字，则成立
+  predicate isVolatile() {
+    getField().isVolatile() or
+    getQualifier().(SsaSourceField).isVolatile()
+  }
+}
+```
