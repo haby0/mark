@@ -32,3 +32,34 @@ class LocalScopeVariable extends Variable, @localscopevariable {
   abstract Callable getCallable();
 }
 ```
+
+### 3 LocalVariableDecl类
+```ql
+// 局部变量声明
+class LocalVariableDecl extends @localvar, LocalScopeVariable {
+  // 获取局部变量类型
+  override Type getType() { localvars(this, _, result, _) }
+
+  // 获取声明此变量的局部表达式。除了变量类型外的局部表达式。例如：String code = request.getParameter("code");得到code = request.getParameter("code");
+  LocalVariableDeclExpr getDeclExpr() { localvars(this, _, _, result) }
+
+  // 获取局部变量的父表达式。例如：String code = request.getParameter("code");得到code = request.getParameter("code");
+  Expr getParent() { localvars(this, _, _, result) }
+
+  // 获取发生此声明的可调用对象，一般是当前方法
+  override Callable getCallable() { result = this.getParent().getEnclosingCallable() }
+
+  // 获取发生此声明的可调用对象，一般是当前方法
+  Callable getEnclosingCallable() { result = getCallable() }
+
+  // 显示此变量的string字符串
+  override string toString() { result = this.getType().getName() + " " + this.getName() }
+
+  /** Gets the initializer expression of this local variable declaration. */
+  // 获取此局部变量声明的初始化表达式。 例如：String code = request.getParameter("code");得到request.getParameter("code");
+  override Expr getInitializer() { result = getDeclExpr().getInit() }
+ 
+  // CodeQL当前类名
+  override string getAPrimaryQlClass() { result = "LocalVariableDecl" }
+}
+```
