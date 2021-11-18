@@ -1,6 +1,6 @@
 codeql\java\ql\src\semmle\code\java\Variable.qll
 
-1 Variable类
+### 1 Variable类
 ```ql
 // 变量:字段、局部变量或参数
 class Variable extends @variable, Annotatable, Element, Modifiable {
@@ -22,5 +22,13 @@ class Variable extends @variable, Annotatable, Element, Modifiable {
 
   // 显示此变量的string字符串。
   string pp() { result = this.getType().getName() + " " + this.getName() }
+}
+```
+
+### 2 LocalScopeVariable类
+```ql
+class LocalScopeVariable extends Variable, @localscopevariable {
+  // 获取声明此变量的可调用对象
+  abstract Callable getCallable();
 }
 ```
