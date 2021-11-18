@@ -186,3 +186,36 @@ class SsaSourceField extends SsaSourceVariable {
   }
 }
 ```
+
+### 5 TrackedVariablesImpl模块
+
+```ql
+module TrackedVariablesImpl {
+  // 
+  private int numberOfAccesses(SsaSourceField f) {
+    result = strictcount(FieldAccess fa | fa = f.getAnAccess())
+  }
+
+  private predicate loopAccessed(SsaSourceField f) {
+    exists(LoopStmt l, FieldRead fr | fr = f.getAnAccess() |
+      l.getBody() = fr.getEnclosingStmt().getEnclosingStmt*() or
+      l.getCondition() = fr.getParent*() or
+      l.(ForStmt).getAnUpdate() = fr.getParent*()
+    )
+  }
+
+  private predicate multiAccessed(SsaSourceField f) { loopAccessed(f) or 1 < numberOfAccesses(f) }
+
+  cached
+  predicate trackField(SsaSourceField f) { multiAccessed(f) and not f.isVolatile() }
+
+  class TrackedVar extends SsaSourceVariable {
+    TrackedVar() {
+      this = TLocalVar(_, _) or
+      trackField(this)
+    }
+  }
+
+  class TrackedField extends TrackedVar, SsaSourceField { }
+}
+```
