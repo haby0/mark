@@ -1,5 +1,10 @@
 codeql\java\ql\src\semmle\code\java\Variable.qll
 
+对Java变量建模，包括：局部变量、成员变量、类变量
+
+形参：局部变量
+
+
 ### 1 Variable类
 ```ql
 // 变量:字段、局部变量或参数
@@ -61,5 +66,50 @@ class LocalVariableDecl extends @localvar, LocalScopeVariable {
  
   // CodeQL当前类名
   override string getAPrimaryQlClass() { result = "LocalVariableDecl" }
+}
+```
+
+### 4 Parameter类
+```ql
+// 可调用形参
+class Parameter extends Element, @param, LocalScopeVariable {
+  // 形参参数类型
+  override Type getType() { params(this, result, _, _, _) }
+
+  // 形参没有在可调用内部没有被重新赋值。getAnAssignedValue(): 获取变量右表达式
+  predicate isEffectivelyFinal() { not exists(getAnAssignedValue()) }
+
+  // 获取该形参（从零开始的）索引（可调用对象）。
+  int getPosition() { params(this, _, result, _, _) }
+
+  // 获取声明此形参的可调用对象。对于Parameter来说，获取的是该参数所在的函数
+  override Callable getCallable() { params(this, _, _, result, _) }
+
+  // 获取这个形参的源
+  Parameter getSourceDeclaration() { params(this, _, _, _, result) }
+
+  // 形参本身是源
+  predicate isSourceDeclaration() { this.getSourceDeclaration() = this }
+
+  // 形参是可变参数。例如：private boolean isValid(String... name) {...}; `String... name`为可变参数，可以看Java对可变参数的定义
+  predicate isVarargs() { isVarargsParam(this) }
+
+  // 获取形参可调用对象被调用处的参数。如：boolean result = isValid(name); ...; private boolean isValid(String name) {...}; 函数，形参为String name，此处获取调用isValid函数处的name参数
+  // 此处形参不能是可变参数
+  Expr getAnArgument() {
+    not isVarargs() and
+    result = getACallArgument(getPosition())
+  }
+
+  pragma[noinline]
+  private Expr getACallArgument(int i) {
+    exists(Call call |
+      result = call.getArgument(i) and // 可调用对象调用处指定位置的参数
+      call.getCallee().getSourceDeclaration().getAParameter() = this  // 调用目标的可调用对象来源的形参
+    )
+  }
+  
+   // CodeQL当前类名
+  override string getAPrimaryQlClass() { result = "Parameter" }
 }
 ```
