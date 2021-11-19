@@ -19,15 +19,19 @@ class Expr extends ExprParent, @expr {
   int getIndex() { exprs(this, _, _, _, result) }
 
   /** Gets the parent of this expression. */
+  // 父表达式
   ExprParent getParent() { exprs(this, _, _, result, _) }
 
   /** Holds if this expression is the child of the specified parent at the specified (zero-based) position. */
+  // 表达式是父表达式指定位置则成立
   predicate isNthChildOf(ExprParent parent, int index) { exprs(this, _, _, parent, index) }
 
   /** Gets the type of this expression. */
+  // 表达式类型
   Type getType() { exprs(this, _, result, _, _) }
 
   /** Gets the compilation unit in which this expression occurs. */
+  // 获取次表达式的编译单元（表达式所在文件）
   CompilationUnit getCompilationUnit() { result = this.getFile() }
 
   /**
