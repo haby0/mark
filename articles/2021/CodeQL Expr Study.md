@@ -1,5 +1,7 @@
 codeql\java\ql\src\semmle\code\java\Expr.qll
 
+CodeQL对Java表达式的处理
+
 ### 1 Expr类
 ```ql
 /** A common super-class that represents all kinds of expressions. */
@@ -11,7 +13,7 @@ class Expr extends ExprParent, @expr {
   /**
    * Gets the callable in which this expression occurs, if any.
    */
-  // 获取表达式的可调用对象 
+  // 获取表达式的可调用对象。可调用对象：方法或构造函数 
   Callable getEnclosingCallable() { callableEnclosingExpr(this, result) }
 
   /** Gets the index of this expression as a child of its parent. */
@@ -47,27 +49,47 @@ class Expr extends ExprParent, @expr {
    * comparing whether two expressions have the same kind (as opposed
    * to checking whether an expression has a particular kind).
    */
+  // 获取表达式类型
   int getKind() { exprs(this, result, _, _, _) }
+  
+  /**
+   * DEPRECATED: This is no longer necessary. See `Expr.isParenthesized()`.
+   *
+   * Gets this expression with any surrounding parentheses removed.
+   */
+  // 废弃
+  // 获取去除括号或的表达式
+  deprecated Expr getProperExpr() {
+    result = this.(ParExpr).getExpr().getProperExpr()
+    or
+    result = this and not this instanceof ParExpr
+  }
 
   /** Gets the statement containing this expression, if any. */
+  // 获取包含此表达式的语句
   Stmt getEnclosingStmt() { statementEnclosingExpr(this, result) }
 
   /**
    * Gets a statement that directly or transitively contains this expression, if any.
    * This is equivalent to `this.getEnclosingStmt().getEnclosingStmt*()`.
    */
+  // 获取包含该表达式的所有语句
   Stmt getAnEnclosingStmt() { result = this.getEnclosingStmt().getEnclosingStmt*() }
 
   /** Gets a child of this expression. */
+  // 获取子表达式
   Expr getAChildExpr() { exprs(result, _, _, this, _) }
 
   /** Gets the basic block in which this expression occurs, if any. */
+  // 获取出现该表达式的基本块。基本块继承控制流节点。
   BasicBlock getBasicBlock() { result.getANode() = this }
 
   /** Gets the `ControlFlowNode` corresponding to this expression. */
+  // 当前表达式也是控制流节点，返回控制流节点形式
   ControlFlowNode getControlFlowNode() { result = this }
 
   /** This statement's Halstead ID (used to compute Halstead metrics). */
+  // 此语句的 Halstead ID（用于计算 Halstead 指标）
   string getHalsteadID() { result = this.toString() }
 
   /**
@@ -75,9 +97,11 @@ class Expr extends ExprParent, @expr {
    *
    * See JLS v8, section 15.28 (Constant Expressions).
    */
+  // 表达式是否是编译时常量。参考：https://docs.oracle.com/javase/specs/jls/se8/jls8.pdf
   predicate isCompileTimeConstant() { this instanceof CompileTimeConstantExpr }
 
   /** Holds if this expression occurs in a static context. */
+  // 表达式在静态上下文中则成立
   predicate isInStaticContext() {
     /*
      * JLS 8.1.3 (Inner Classes and Enclosing Instances)
@@ -89,18 +113,19 @@ class Expr extends ExprParent, @expr {
      * explicit constructor invocation statement.
      */
 
-    this.getEnclosingCallable().isStatic()
+    this.getEnclosingCallable().isStatic()  // 表达式可调用对象是静态
     or
-    this.getParent+() instanceof ThisConstructorInvocationStmt
+    this.getParent+() instanceof ThisConstructorInvocationStmt  // 父表达式是调用构造函数。例如：this(test);  test是表达式
     or
-    this.getParent+() instanceof SuperConstructorInvocationStmt
+    this.getParent+() instanceof SuperConstructorInvocationStmt  // 父表达式是调用父类构造函数。例如：super(test);  test是表达式
     or
-    exists(LambdaExpr lam |
+    exists(LambdaExpr lam |  // Lambda表达式
       lam.asMethod() = this.getEnclosingCallable() and lam.isInStaticContext()
     )
   }
 
   /** Holds if this expression is parenthesized. */
+  // 表达式是被括号括起来的
   predicate isParenthesized() { isParenthesized(this, _) }
 }
 ```
