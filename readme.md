@@ -10,6 +10,7 @@
 <br>
 
 ## [2021年](articles/2021/)
+- &lt;article month=12 day=15 title=&quot;[Web漏扫扫描Log4j RCE漏洞](articles/2021/Web漏扫扫描Log4j%20RCE漏洞.md)&quot;/&gt;
 - &lt;article month=11 day=18 title=&quot;[CodeQL Variable Study](articles/2021/CodeQL%20Variable%20Study.md)&quot;/&gt;
 - &lt;article month=10 day=19 title=&quot;[CodeQL SSA Study](articles/2021/CodeQL%20SSA%20Study.md)&quot;/&gt;
 - &lt;article month=08 day=13 zh=&quot;[使用CodeQL检测请求转发漏洞](articles/2021/使用CodeQL检测请求转发漏洞.md)&quot; en=&quot;[Detecting Client IP forgery vulnerabilities with CodeQL](articles/2021/Detecting%20Request%20forwarde%20vulnerabilities%20with%20CodeQL.md)&quot; /&gt;
