@@ -1,6 +1,11 @@
+### 前言
+
 这些`CSV`（实际上是`SSV` - 分号分隔）行中的最后一个条目是污点或值，具体取决于模型是否传播污点或参数或限定符的确切值
 
 CodeQL中的CSV flow模型（模型即数据）。CodeQL可以基于AST对某种风险建模，也可以使用CSV方式建模，在某些场景下CSV方式建模更方便、更流畅。
+
+
+### 示例说明
 
 用SSRF的例子
 
@@ -94,7 +99,7 @@ class SinkModelCsv extends Unit {
   abstract predicate row(string row);
 }
 
-// sink csv模型。有两种方式：（1）在 sinkModelCsv 谓词中直接描述sink；（2）继承 SinkModelCsv 类，重写 row 谓词。
+// sink模型。有两种方式：（1）在 sinkModelCsv 谓词中直接描述sink；（2）继承 SinkModelCsv 类，重写 row 谓词。
 private predicate sinkModel(string row) {
   sinkModelCsv(row) or
   any(SinkModelCsv s).row(row)
@@ -125,7 +130,7 @@ predicate sinkElement(SourceOrSinkElement e, string input, string kind) {
   exists(
     string namespace, string type, boolean subtypes, string name, string signature, string ext
   |
-    sinkModel(namespace, type, subtypes, name, signature, ext, input, kind) and
+    sinkModel(namespace, type, subtypes, name, signature, ext, input, kind) and  // 根据sinkModel谓词得到
     e = interpretElement(namespace, type, subtypes, name, signature, ext)
   )
 }
