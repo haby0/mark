@@ -110,7 +110,7 @@ private predicate sinkModel(string row) {
 // 2、type：包中的类名。其中内部类格式：A$B
 // 3、subtypes：布尔类型。[true, false]。当为true时，会寻找子类重写的类型成员name。
 // 4、name：可选，类型成员。成员可以是构造函数、方法、字段和嵌套类型
-// 5、signature：可选，限制类中的成员。格式为用括号括起来的类型的逗号分隔列表。类型可以是字面量或者完全限定名。signature也可以为空。()和空得到的结果一致。
+// 5、signature：可选，限制类中的成员。格式为用括号括起来的类型的逗号分隔列表。类型可以是字面量或者完全限定名。signature也可以为空。()和""得到的结果一致。完全限定名示例：void clear(Transaction tx)，signature可以写成(org.apache.activemq.store.kahadb.disk.page.Transaction)
 // 6、ext：额外的边，只有""和"Annotated"两个值
 // 7、input：指定数据如何进入前6列选择的元素。可以是：""、"Argument[n]"、"Argument[n1..n2]"、"ReturnValue"
 // 8、kind：标记上面的最终标识的elements用于哪类建模。例如："open-url"用于ssrf漏洞sink建模
@@ -173,18 +173,19 @@ private Element interpretElement0(
       m.getDeclaringType() = t and  // 声明类型成员的类型等于引用类型t
       m.hasName(name)  // 类型成员名为name
     |
-      signature = "" or
-      m.(Callable).getSignature() = any(string nameprefix) + signature or  // 
+      signature = "" or  // signature可以为""，在()内使用逗号分隔的完全限定名列表，字面量
+      m.(Callable).getSignature() = any(string nameprefix) + signature or
       paramsString(m) = signature
     )
     or
-    (if subtypes = true then result.(SrcRefType).getASourceSupertype*() = t else result = t) and
-    name = "" and
-    signature = ""
+    (if subtypes = true then result.(SrcRefType).getASourceSupertype*() = t else result = t) and  // 当subtypes为true时，返回类型的自身和所有超类等于引用类型t。否则返回类型等于引用类型t
+    name = "" and  // name可以为""
+    signature = ""  // signature可以为""
   )
 }
 
 /** Gets the source/sink/summary element corresponding to the supplied parameters. */
+// 获取与提供的参数对应的 source/sink/summary 元素
 Element interpretElement(
   string namespace, string type, boolean subtypes, string name, string signature, string ext
 ) {
