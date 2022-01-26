@@ -105,7 +105,15 @@ private predicate sinkModel(string row) {
   any(SinkModelCsv s).row(row)
 }
 
-// sink模型
+// sink模型规范：`namespace; type; subtypes; name; signature; ext; input; kind`
+// 1、namespace：包名
+// 2、type：包中的类名。其中内部类格式：A$B
+// 3、subtypes：布尔类型。[true, false]。当为true时，会寻找子类重写的类型成员name。
+// 4、name：可选，类型成员。成员可以是构造函数、方法、字段和嵌套类型
+// 5、signature：可选，限制类中的成员。格式为用括号括起来的类型的逗号分隔列表。类型可以是字面量或者完全限定名。signature也可以为空。()和空得到的结果一致。
+// 6、ext：额外的边，只有""和"Annotated"两个值
+// 7、input：指定数据如何进入前6列选择的元素。可以是：""、"Argument[n]"、"Argument[n1..n2]"、"ReturnValue"
+// 8、kind：标记上面的最终标识的elements用于哪类建模。例如："open-url"用于ssrf漏洞sink建模
 predicate sinkModel(
   string namespace, string type, boolean subtypes, string name, string signature, string ext,
   string input, string kind
@@ -126,12 +134,74 @@ predicate sinkModel(
 ```
 
 ```ql
+
+private string paramsStringPart(Callable c, int i) {
+  i = -1 and result = "("
+  or
+  exists(int n, string p | c.getParameterType(n).getErasure().toString() = p |
+    i = 2 * n and result = p
+    or
+    i = 2 * n - 1 and result = "," and n != 0
+  )
+  or
+  i = 2 * c.getNumberOfParameters() and result = ")"
+}
+
+cached
+string paramsString(Callable c) { result = concat(int i | | paramsStringPart(c, i) order by i) }
+
+pragma[nomagic]
+private predicate elementSpec(
+  string namespace, string type, boolean subtypes, string name, string signature, string ext
+) {
+  sourceModel(namespace, type, subtypes, name, signature, ext, _, _) or
+  sinkModel(namespace, type, subtypes, name, signature, ext, _, _) or
+  summaryModel(namespace, type, subtypes, name, signature, ext, _, _, _)
+}
+
+private Element interpretElement0(
+  string namespace, string type, boolean subtypes, string name, string signature
+) {
+  elementSpec(namespace, type, subtypes, name, signature, _) and // 这里感觉是多余的
+  exists(RefType t | t.hasQualifiedName(namespace, type) |  // 引用类型t在namespace包type名称中。
+    exists(Member m |  // 当subtypes为true时，会得到所有的子类重写方法，包括自身方法。当subtypes为false时，只能得到自身方法
+      (
+        result = m
+        or
+        subtypes = true and result.(SrcMethod).overridesOrInstantiates+(m)
+      ) and
+      m.getDeclaringType() = t and  // 声明类型成员的类型等于引用类型t
+      m.hasName(name)  // 类型成员名为name
+    |
+      signature = "" or
+      m.(Callable).getSignature() = any(string nameprefix) + signature or  // 
+      paramsString(m) = signature
+    )
+    or
+    (if subtypes = true then result.(SrcRefType).getASourceSupertype*() = t else result = t) and
+    name = "" and
+    signature = ""
+  )
+}
+
+/** Gets the source/sink/summary element corresponding to the supplied parameters. */
+Element interpretElement(
+  string namespace, string type, boolean subtypes, string name, string signature, string ext
+) {
+  elementSpec(namespace, type, subtypes, name, signature, ext) and // 这里感觉是多余的
+  exists(Element e | e = interpretElement0(namespace, type, subtypes, name, signature) |
+    ext = "" and result = e
+    or
+    ext = "Annotated" and result.(Annotatable).getAnAnnotation().getType() = e
+  )
+}
+
 predicate sinkElement(SourceOrSinkElement e, string input, string kind) {
   exists(
     string namespace, string type, boolean subtypes, string name, string signature, string ext
   |
-    sinkModel(namespace, type, subtypes, name, signature, ext, input, kind) and  // 根据sinkModel谓词得到
-    e = interpretElement(namespace, type, subtypes, name, signature, ext)
+    sinkModel(namespace, type, subtypes, name, signature, ext, input, kind) and  // 通过kind标签，在sinkModel谓词得到namespace, type, subtypes, name, signature, ext, input
+    e = interpretElement(namespace, type, subtypes, name, signature, ext) // 通过上步获取到的namespace, type, subtypes, name, signature, ext得到一个解释的element
   )
 }
 ```
