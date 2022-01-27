@@ -153,6 +153,7 @@ private string paramsStringPart(Callable c, int i) {
 cached
 string paramsString(Callable c) { result = concat(int i | | paramsStringPart(c, i) order by i) }
 
+// 收敛计算结果
 pragma[nomagic]
 private predicate elementSpec(
   string namespace, string type, boolean subtypes, string name, string signature, string ext
@@ -162,6 +163,17 @@ private predicate elementSpec(
   summaryModel(namespace, type, subtypes, name, signature, ext, _, _, _)
 }
 
+// 1、interpretElement0方法首先调用elementSpec收敛计算结果
+// 2、通过exists得到Element节点
+// 2.1、判断存在指定的引用类型t。如果引用类型t都不存在，就没必要做下面的判断了。自顶而下。
+// 2.2、两步计算获取到Element节点
+// 2.2.1、引用类型t中存在类型成员m。当subtypes为true时，result可以是类型成员m的重写。并且需要满足下面条件之一：
+//       （1）signature等于"";
+//       （2）类型成员m签名以signature结尾；
+//       （3）signature等于可调用对象形参类型擦除列表；
+// 2.2.2、当引用类型t中不存在类型成员m时。首先，name等于""，signature等于""。当subtypes为true时，Element节点超类等于引用类型t。当subtypes为false时，Element节点等于引用类型t
+
+// 所以interpretElement0方法会得到两种结果。一种是类型成员或类型成员的重写，一种是引用类型或子类型。
 private Element interpretElement0(
   string namespace, string type, boolean subtypes, string name, string signature
 ) {
@@ -178,12 +190,12 @@ private Element interpretElement0(
     |
       signature = "" or  // signature可以为""，在()内使用逗号分隔的完全限定名列表，字面量
       m.(Callable).getSignature() = any(string nameprefix) + signature or
-      paramsString(m) = signature // signature得到可调用对象形参类型擦除列表
+      paramsString(m) = signature // signature等于可调用对象形参类型擦除列表
     )
     or
     (if subtypes = true then result.(SrcRefType).getASourceSupertype*() = t else result = t) and  // 当subtypes为true时，返回类型的自身和所有超类等于引用类型t。否则返回类型等于引用类型t
-    name = "" and  // name可以为""
-    signature = ""  // signature可以为""
+    name = "" and  // name等于""
+    signature = ""  // signature等于""
   )
 }
 
