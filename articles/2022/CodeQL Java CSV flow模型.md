@@ -135,6 +135,8 @@ predicate sinkModel(
 
 ```ql
 
+// 获取可调用对象形参类型擦除字符串表示。 例如：public HashSet(Collection<? extends E> c) { .. } 依次返回"("，"Collection"，")"
+// 关于Java类型擦除，可以查看：https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.6
 private string paramsStringPart(Callable c, int i) {
   i = -1 and result = "("
   or
@@ -147,6 +149,7 @@ private string paramsStringPart(Callable c, int i) {
   i = 2 * c.getNumberOfParameters() and result = ")"
 }
 
+// 获取可调用对象形参类型擦除列表。例如：public HashSet(Collection<? extends E> c) { .. } 得到 (Collection)
 cached
 string paramsString(Callable c) { result = concat(int i | | paramsStringPart(c, i) order by i) }
 
@@ -175,7 +178,7 @@ private Element interpretElement0(
     |
       signature = "" or  // signature可以为""，在()内使用逗号分隔的完全限定名列表，字面量
       m.(Callable).getSignature() = any(string nameprefix) + signature or
-      paramsString(m) = signature
+      paramsString(m) = signature // signature得到可调用对象形参类型擦除列表
     )
     or
     (if subtypes = true then result.(SrcRefType).getASourceSupertype*() = t else result = t) and  // 当subtypes为true时，返回类型的自身和所有超类等于引用类型t。否则返回类型等于引用类型t
