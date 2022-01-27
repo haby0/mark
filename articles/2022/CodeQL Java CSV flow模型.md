@@ -201,11 +201,14 @@ private Element interpretElement0(
 
 /** Gets the source/sink/summary element corresponding to the supplied parameters. */
 // 获取与提供的参数对应的 source/sink/summary 元素
+
+// 当ext等于""时，得到类型成员，类型成员的复写，引用类型，引用类型子类型
+// 当ext等于"Annotated"时，得到使用注解引用类型或引用类型子类型的引用类型
 Element interpretElement(
   string namespace, string type, boolean subtypes, string name, string signature, string ext
 ) {
   elementSpec(namespace, type, subtypes, name, signature, ext) and // 这里粗看是多余的，和CodeQL研发交流，这里是为了收敛谓词计算结果。在MyBatis SQL注入建模时遇到笛卡尔积的问题，和这里类似。
-  exists(Element e | e = interpretElement0(namespace, type, subtypes, name, signature) |
+  exists(Element e | e = interpretElement0(namespace, type, subtypes, name, signature) |  // interpretElement0得到类型成员，类型成员的复写，引用类型，引用类型子类型
     ext = "" and result = e
     or
     ext = "Annotated" and result.(Annotatable).getAnAnnotation().getType() = e
@@ -217,15 +220,22 @@ predicate sinkElement(SourceOrSinkElement e, string input, string kind) {
     string namespace, string type, boolean subtypes, string name, string signature, string ext
   |
     sinkModel(namespace, type, subtypes, name, signature, ext, input, kind) and  // 通过kind标签，在sinkModel谓词得到namespace, type, subtypes, name, signature, ext, input
-    e = interpretElement(namespace, type, subtypes, name, signature, ext) // 通过上步获取到的namespace, type, subtypes, name, signature, ext得到一个解释的element
+    e = interpretElement(namespace, type, subtypes, name, signature, ext) // 通过上步获取到的namespace, type, subtypes, name, signature, ext得到一个解释的element，element得到类型成员，类型成员的复写，引用类型，引用类型子类型，使用注解引用类型或引用类型子类型的引用类型
   )
 }
 ```
 
 ```ql
+string specLast(string s) {
+  exists(int len |
+    specLength(s, len) and
+    specSplit(s, result, len - 1)
+  )
+}
+
 private predicate sinkElementRef(InterpretNode ref, string input, string kind) {
   exists(SourceOrSinkElement e |
-    sinkElement(e, input, kind) and
+    sinkElement(e, input, kind) and // sinkElement方法根据kind得到SourceOrSinkElement节点和input值。可能是：类型成员，类型成员的复写，引用类型，引用类型子类型，使用注解引用类型或引用类型子类型的引用类型
     if inputNeedsReference(specLast(input))
     then e = ref.getCallTarget()
     else e = ref.asElement()
