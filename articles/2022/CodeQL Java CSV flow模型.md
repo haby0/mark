@@ -1,6 +1,6 @@
 ### 前言
 
-这些`CSV`（实际上是`SSV` - 分号分隔）行中的最后一个条目是污点或值，具体取决于模型是否传播污点或参数或限定符的确切值
+这些`CSV`（实际上是`SSV` - 分号分隔）行中的最后一个条目是污点或值，具体取决于模型是否传播污点或参数或限定符的确切值。
 
 CodeQL中的CSV flow模型（模型即数据）。CodeQL可以基于AST对某种风险建模，也可以使用CSV方式建模，在某些场景下CSV方式建模更方便、更流畅。
 
@@ -162,7 +162,7 @@ private predicate elementSpec(
 private Element interpretElement0(
   string namespace, string type, boolean subtypes, string name, string signature
 ) {
-  elementSpec(namespace, type, subtypes, name, signature, _) and // 这里感觉是多余的
+  elementSpec(namespace, type, subtypes, name, signature, _) and // 这里粗看是多余的，和CodeQL研发交流，这里是为了收敛谓词计算结果。在MyBatis SQL注入建模时遇到笛卡尔积的问题，和这里类似。
   exists(RefType t | t.hasQualifiedName(namespace, type) |  // 引用类型t在namespace包type名称中。
     exists(Member m |  // 当subtypes为true时，会得到所有的子类重写方法，包括自身方法。当subtypes为false时，只能得到自身方法
       (
@@ -189,7 +189,7 @@ private Element interpretElement0(
 Element interpretElement(
   string namespace, string type, boolean subtypes, string name, string signature, string ext
 ) {
-  elementSpec(namespace, type, subtypes, name, signature, ext) and // 这里感觉是多余的
+  elementSpec(namespace, type, subtypes, name, signature, ext) and // 这里粗看是多余的，和CodeQL研发交流，这里是为了收敛谓词计算结果。在MyBatis SQL注入建模时遇到笛卡尔积的问题，和这里类似。
   exists(Element e | e = interpretElement0(namespace, type, subtypes, name, signature) |
     ext = "" and result = e
     or
