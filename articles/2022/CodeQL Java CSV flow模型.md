@@ -16,7 +16,8 @@ private class UrlOpenSinkAsRequestForgerySink extends RequestForgerySink {
 ```
 
 ```ql
-InterpretNode类型：包含了所有节点。
+
+InterpretNode类型：包含了所有节点
 
 cached
 predicate sinkNode(Node node, string kind) {
@@ -226,19 +227,59 @@ predicate sinkElement(SourceOrSinkElement e, string input, string kind) {
 ```
 
 ```ql
-string specLast(string s) {
-  exists(int len |
-    specLength(s, len) and
-    specSplit(s, result, len - 1)
-  )
+module External {
+  /** Holds if `spec` is a relevant external specification. */
+  // 检验`spec`做为csv行`input`是否存在
+  private predicate relevantSpec(string spec) {
+    summaryElement(_, spec, _, _) or
+    summaryElement(_, _, spec, _) or
+    sourceElement(_, spec, _) or
+    sinkElement(_, spec, _)
+  }
+
+  /** Holds if the `n`th component of specification `s` is `c`. */
+  // 当`spec`做为csv行`input`存在时。按照" of "切分，n为切分的下限值
+  predicate specSplit(string s, string c, int n) { relevantSpec(s) and s.splitAt(" of ", n) = c }
+
+  /** Holds if specification `s` has length `len`. */
+  // 将`s`切分，取切分下限（从0开始）最大值。例如：当`s`为"Argument[0]"时，得到n为0。当`s`为"aaa of bbb"时，得到n为1
+  predicate specLength(string s, int len) { len = 1 + max(int n | specSplit(s, _, n)) }
+
+  /** Gets the last component of specification `s`. */
+  // 得到`s`切分后的最后一个值。
+  string specLast(string s) {
+    exists(int len |
+      specLength(s, len) and  // `s`在cvs行中存在，并得到len。
+      specSplit(s, result, len - 1)  // `s`在cvs行中存在，通过前一步计算得到的`n`在这步得到按" of "切分后的最后一个值。
+    )
+  }
+  
+  predicate parseArg(string c, int n) {
+    specSplit(_, c, _) and
+    (
+      c.regexpCapture("Argument\\[([-0-9]+)\\]", 1).toInt() = n
+      or
+      exists(int n1, int n2 |
+        c.regexpCapture("Argument\\[([-0-9]+)\\.\\.([0-9]+)\\]", 1).toInt() = n1 and
+        c.regexpCapture("Argument\\[([-0-9]+)\\.\\.([0-9]+)\\]", 2).toInt() = n2 and
+        n = [n1 .. n2]
+      )
+    )
+  }
+}
+
+// input值格式校验。input格式：Argument，Argument[n]，Argument[n1..n2]
+private predicate inputNeedsReference(string c) {
+  c = "Argument" or
+  parseArg(c, _)
 }
 
 private predicate sinkElementRef(InterpretNode ref, string input, string kind) {
   exists(SourceOrSinkElement e |
     sinkElement(e, input, kind) and // sinkElement方法根据kind得到SourceOrSinkElement节点和input值。可能是：类型成员，类型成员的复写，引用类型，引用类型子类型，使用注解引用类型或引用类型子类型的引用类型
-    if inputNeedsReference(specLast(input))
-    then e = ref.getCallTarget()
-    else e = ref.asElement()
+    if inputNeedsReference(specLast(input))  // input 格式校验。如果是Argument，Argument[n]，Argument[n1..n2]中的一种，则为true。否则为false。
+    then e = ref.getCallTarget()  // 得到可调用对象
+    else e = ref.asElement()  // 得到节点本身
   )
 }
 
