@@ -13,6 +13,7 @@ CSV row示例:
 ### 2. CSV flow model
 
 名词解释：
+
 CSV: 实际上是SSV(semicolon separated values), 中文意思是分号分隔值.
 
 使用CodeQL去分析一些程序时, 实际上底层已经用到了CSV row, 下面做一个测试.
