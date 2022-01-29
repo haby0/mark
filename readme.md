@@ -9,6 +9,9 @@
 
 <br>
 
+## [2022年](articles/2022/)
+- &lt;article month=01 day=29 title=&quot;[CodeQL Java CSV flow模型](articles/2022/CodeQL%20Java%20CSV%20flow模型.md)&quot;/&gt;
+
 ## [2021年](articles/2021/)
 - &lt;article month=12 day=15 title=&quot;[Web漏扫扫描Log4j RCE漏洞](articles/2021/Web漏扫扫描Log4j%20RCE漏洞.md)&quot;/&gt;
 - &lt;article month=11 day=18 title=&quot;[CodeQL Variable Study](articles/2021/CodeQL%20Variable%20Study.md)&quot;/&gt;
