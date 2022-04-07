@@ -10,6 +10,7 @@
 <br>
 
 ## [2022年](articles/2022/)
+- &lt;article month=04 day=07 title=&quot;[编译原理资料](articles/2022/编译原理资料.md)&quot;/&gt;
 - &lt;article month=01 day=29 title=&quot;[CodeQL Java CSV flow模型](articles/2022/CodeQL%20Java%20CSV%20flow模型.md)&quot;/&gt;
 
 ## [2021年](articles/2021/)
